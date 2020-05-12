@@ -117,7 +117,6 @@ class myThread (threading.Thread):
             time.sleep(.2)              # sleep for 200 ms
 
 if __name__ == "__main__":
-    GPIO.setmode(GPIO.BOARD)
     dexter = Powertrain(direction_pins, step_pins)
     dexter.setup()
     #BrickPiSetup()  						# setup the serial port for communication
@@ -130,5 +129,5 @@ if __name__ == "__main__":
     thread1.start()
     application.listen(9093)          	#starts the websockets connection
     tornado.ioloop.IOLoop.instance().start()
-  
+    GPIO.cleanup()
 

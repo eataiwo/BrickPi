@@ -35,7 +35,7 @@
 #		"kill -9 pid"
 #	If the error does not go away, try changin the port number '9093' both in the client and server code
 
-from powertrain import Powertrain #import BrickPi.py file to use BrickPi operations
+from powertrain import Powertrain  # import BrickPi.py file to use BrickPi operations
 import threading
 import tornado.ioloop
 import tornado.web
@@ -50,84 +50,92 @@ step_pins = (22, 24, 26, 21)
 speed = 80
 distance = 0.1
 
+c = 0
 
-c=0
-#Initialize TOrnado to use 'GET' and load index.html
+
+# Initialize TOrnado to use 'GET' and load index.html
 class MainHandler(tornado.web.RequestHandler):
-  def get(self):
-    loader = tornado.template.Loader(".")
-    self.write(loader.load("index.html").generate())
+    def get(self):
+        loader = tornado.template.Loader(".")
+        self.write(loader.load("index.html").generate())
 
-#Code for handling the data sent from the webpage
+
+# Code for handling the data sent from the webpage
 class WSHandler(tornado.websocket.WebSocketHandler):
     def open(self):
-        print ('connection opened...')
-    def check_origin(self,origin):
+        print('connection opened...')
+
+    def check_origin(self, origin):
         return True
-    def on_message(self, message):      # receives the data from the webpage and is stored in the variable message
+
+    def on_message(self, message):  # receives the data from the webpage and is stored in the variable message
         global c
-        print ('received:', message)        # prints the revived from the webpage
-        if message == "u":                # checks for the received data and assigns different values to c which controls the movement of robot.
-          c = "8"
+        print('received:', message)  # prints the revived from the webpage
+        if message == "u":  # checks for the received data and assigns different values to c which controls the movement of robot.
+            c = "8"
         if message == "d":
-          c = "2"
+            c = "2"
         if message == "l":
-          c = "6"
+            c = "6"
         if message == "r":
-          c = "4"
+            c = "4"
         if message == "b":
-          c = "5"
-        print (c)
-        if c == '8' :
-          print ("Running Forward")
-          dexter.go('forward', distance, speed, 0.05)
-        elif c == '2' :
-          print ("Running Reverse")
-          dexter.go('backward', distance, speed, 0.05)
-        elif c == '4' :
-          print ("Turning Right")
-          dexter.go('right', distance, speed, 0.05)
-        elif c == '6' :
-          print ("Turning Left")
-          dexter.go('left', distance, speed, 0.05)
-        elif c == '5' :
-          print ("Stopped")
-          dexter.stop()
-        #BrickPiUpdateValues();                # BrickPi updates the values for the motors
-        #print "Values Updated"
+            c = "5"
+        print(c)
+        if c == '8':
+            print("Running Forward")
+            dexter.go_steps('forward', 2, speed, 0.05)
+        elif c == '2':
+            print("Running Reverse")
+            dexter.go_steps('backward', 2, speed, 0.05)
+        elif c == '4':
+            print("Turning Right")
+            dexter.go_steps('right', 2, speed, 0.05)
+        elif c == '6':
+            print("Turning Left")
+            dexter.go_steps('left', 2, speed, 0.05)
+        elif c == '5':
+            print("Stopped")
+            dexter.stop()
+        # BrickPiUpdateValues();                # BrickPi updates the values for the motors
+        # print "Values Updated"
+
     def on_close(self):
-        print ('connection closed...')
+        print('connection closed...')
+
 
 application = tornado.web.Application([
-  (r'/ws', WSHandler),
-  (r'/', MainHandler),
-  (r"/(.*)", tornado.web.StaticFileHandler, {"path": "./resources"}),
+    (r'/ws', WSHandler),
+    (r'/', MainHandler),
+    (r"/(.*)", tornado.web.StaticFileHandler, {"path": "./resources"}),
 ])
 
-class myThread (threading.Thread):
+
+class myThread(threading.Thread):
     def __init__(self, threadID, name, counter):
         threading.Thread.__init__(self)
         self.threadID = threadID
         self.name = name
         self.counter = counter
+
     def run(self):
         print("Ready")
         while running:
-            #BrickPiUpdateValues()       # Ask BrickPi to update values for sensors/motors
-            time.sleep(.2)              # sleep for 200 ms
+            # BrickPiUpdateValues()       # Ask BrickPi to update values for sensors/motors
+            time.sleep(.2)  # sleep for 200 ms
+
 
 if __name__ == "__main__":
     dexter = Powertrain(direction_pins, step_pins)
     dexter.setup()
-    #BrickPiSetup()  						# setup the serial port for communication
-    #BrickPi.MotorEnable[PORT_A] = 1 		#Enable the Motor A
-    #BrickPi.MotorEnable[PORT_D] = 1 		#Enable the Motor D
-    #BrickPiSetupSensors()   				#Send the properties of sensors to BrickPi
+    # BrickPiSetup()  						# setup the serial port for communication
+    # BrickPi.MotorEnable[PORT_A] = 1 		#Enable the Motor A
+    # BrickPi.MotorEnable[PORT_D] = 1 		#Enable the Motor D
+    # BrickPiSetupSensors()   				#Send the properties of sensors to BrickPi
     running = True
     thread1 = myThread(1, "Thread-1", 1)
     thread1.setDaemon(True)
     thread1.start()
-    application.listen(9093)          	#starts the websockets connection
+    application.listen(9093)  # starts the websockets connection
     tornado.ioloop.IOLoop.instance().start()
     GPIO.cleanup()
-
